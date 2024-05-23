@@ -28,7 +28,7 @@ public class SimulationController {
 
     @GetMapping("/simulation/calendar")
     public ResponseEntity<List<CalendarProjectDTO>> getCalendar() {
-        List<CalendarProjectDTO> projects = backendForFrontendFacade.getCalendarForPeriodOfTime();
+        List<CalendarProjectDTO> projects = backendForFrontendFacade.getCalendar();
         return ResponseEntity.ok(projects);
     }
 

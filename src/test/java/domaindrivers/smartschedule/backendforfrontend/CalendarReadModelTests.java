@@ -1,6 +1,5 @@
 package domaindrivers.smartschedule.backendforfrontend;
 
-import domaindrivers.smartschedule.MockedClockConfiguration;
 import domaindrivers.smartschedule.MockedEventPublisherConfiguration;
 import domaindrivers.smartschedule.TaskExecutorConfiguration;
 import domaindrivers.smartschedule.TestDbConfiguration;
@@ -27,14 +26,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.jdbc.Sql;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Import({TestDbConfiguration.class, MockedEventPublisherConfiguration.class, TaskExecutorConfiguration.class})
@@ -60,7 +55,7 @@ public class CalendarReadModelTests {
     BackendForFrontendFacade backendForFrontendFacade;
 
     @Test
-    void returnsProjectsWithinGivenTimeSlot() {
+    void returnsAllProjects() {
         //given
         TimeSlot oneDay = TimeSlot.createDailyTimeSlotAtUTC(2021, 1, 1);
 
@@ -90,49 +85,50 @@ public class CalendarReadModelTests {
 
         DeviceId bulldozer = deviceFacade.createDevice("SUPER-BULLDOZER-1000", Set.of(Capability.asset("BULLDOZER")));
         List<AllocatableCapabilityId> bulldozerAllocatableCapabilitiesIds = deviceFacade.scheduleCapabilities(bulldozer, JANUARY);
-        allocationFacade.allocateToProject(projectAllocationsId2, jozekAllocatableCapabilitiesIds.get(0), JANUARY);
+        allocationFacade.allocateToProject(projectAllocationsId2, bulldozerAllocatableCapabilitiesIds.get(0), JANUARY);
 
         //when
-        List<CalendarProjectDTO> actualCalendarProjectDtoList = backendForFrontendFacade.getCalendarForPeriodOfTime();
+        List<CalendarProjectDTO> actualCalendarProjectDtoList = backendForFrontendFacade.getCalendar();
 
-        assertEquals(2, actualCalendarProjectDtoList.size());
-        assertTrue(actualCalendarProjectDtoList.contains(new CalendarProjectDTO(
-                projectAllocationsId2.id(),
-                JANUARY.from(),
-                JANUARY.to(),
-                Arrays.asList(
-                        new AllocatedResourceDTO(
-                                jozekAllocatableCapabilitiesIds.get(0).getId(),
-                                "Jozek Bizon (SENIOR)",
-                                "employee",
-                                oneDay.from(),
-                                oneDay.to(),
-                                List.of(Capability.skill("JAVA-SENIOR"))
-                        ),
-                        new AllocatedResourceDTO(
-                                bulldozerAllocatableCapabilitiesIds.get(0).getId(),
-                                "SUPER-BULLDOZER-1000",
-                                "device",
-                                JANUARY.from(),
-                                JANUARY.to(),
-                                List.of(Capability.asset("BULLDOZER"))
+        assertThat(actualCalendarProjectDtoList).containsExactlyInAnyOrder(
+                new CalendarProjectDTO(
+                        projectAllocationsId2.id(),
+                        JANUARY.from(),
+                        JANUARY.to(),
+                        Set.of(
+                                new AllocatedResourceDTO(
+                                        jozekAllocatableCapabilitiesIds.get(0).getId(),
+                                        "Jozek Bizon (SENIOR)",
+                                        "employee",
+                                        oneDay.from(),
+                                        oneDay.to(),
+                                        List.of(Capability.skill("JAVA-SENIOR"))
+                                ),
+                                new AllocatedResourceDTO(
+                                        bulldozerAllocatableCapabilitiesIds.get(0).getId(),
+                                        "SUPER-BULLDOZER-1000",
+                                        "device",
+                                        JANUARY.from(),
+                                        JANUARY.to(),
+                                        List.of(Capability.asset("BULLDOZER"))
+                                )
+                        )
+                ),
+                new CalendarProjectDTO(
+                        projectAllocationsId.id(),
+                        JANUARY.from(),
+                        JANUARY.to(),
+                        Set.of(
+                                new AllocatedResourceDTO(
+                                        staszekAllocatableCapabilitiesIds.get(0).getId(),
+                                        "Staszek Staszkowski (MID)",
+                                        "employee",
+                                        oneDay.from(),
+                                        oneDay.to(),
+                                        List.of(Capability.skill("JAVA-MID"))
+                                )
                         )
                 )
-        )));
-        assertTrue(actualCalendarProjectDtoList.contains(new CalendarProjectDTO(
-                projectAllocationsId.id(),
-                JANUARY.from(),
-                JANUARY.to(),
-                Arrays.asList(
-                        new AllocatedResourceDTO(
-                                staszekAllocatableCapabilitiesIds.get(0).getId(),
-                                "Staszek Staszkowski (MID)",
-                                "employee",
-                                oneDay.from(),
-                                oneDay.to(),
-                                List.of(Capability.skill("JAVA-MID"))
-                        )
-                )
-        )));
+        );
     }
 }

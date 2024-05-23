@@ -12,7 +12,7 @@ public class BackendForFrontendFacade {
         this.simulationCalendarReadModel = simulationCalendarReadModel;
     }
 
-    public List<CalendarProjectDTO> getCalendarForPeriodOfTime() {
+    public List<CalendarProjectDTO> getCalendar() {
         return simulationCalendarReadModel.loadAll();
     }
 }

@@ -11,10 +11,8 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class SimulationCalendarReadModel {
     String calendar_query = """
@@ -47,7 +45,7 @@ public class SimulationCalendarReadModel {
             FROM
                 project_allocations p
                 CROSS JOIN LATERAL jsonb_array_elements(p.allocations->'all') AS allocs
-                JOIN allocatable_capabilities ac ON ac.id = (allocs->'id'->>'id')::uuid
+                JOIN allocatable_capabilities ac ON ac.id = (allocs->'allocatedCapabilityID'->>'id')::uuid
                 LEFT JOIN employees e ON ac.resource_id = e.employee_id
                 LEFT JOIN devices d ON ac.resource_id = d.device_id
             GROUP BY
@@ -78,7 +76,6 @@ public class SimulationCalendarReadModel {
                 allocations = mapper.readValue(allocationsJson, new TypeReference<>() {
                 });
             } catch (Exception e) {
-                // Handle the exception appropriately
                 e.printStackTrace();
             }
 
@@ -86,7 +83,7 @@ public class SimulationCalendarReadModel {
                     (UUID) result.get("projectId"),
                     toUtcInstant(result.get("projectStartDate").toString()),
                     toUtcInstant(result.get("projectEndDate").toString()),
-                    allocations
+                    new HashSet<>(allocations)
             );
             projectAllocationDTOs.add(dto);
         }

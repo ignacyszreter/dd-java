@@ -3,10 +3,7 @@ package domaindrivers.smartschedule.resource.employee;
 
 import domaindrivers.smartschedule.shared.capability.Capability;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
-import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.Type;
 
 import java.util.Set;
@@ -24,6 +21,7 @@ class Employee {
 
     private String lastName;
 
+    @Enumerated(EnumType.STRING)
     private Seniority seniority;
 
     @Type(JsonType.class)
